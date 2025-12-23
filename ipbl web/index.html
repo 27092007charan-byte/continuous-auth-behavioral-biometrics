@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Continuous Authentication Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>Continuous Authentication System</h1>
+        <p>Behavioral Biometrics • Keystroke Dynamics</p>
+    </header>
+
+    <main>
+        <section class="left-panel">
+            <h2>User Activity</h2>
+            <textarea id="typingArea" placeholder="Start typing here to authenticate..."></textarea>
+
+            <div class="metrics">
+                <div class="box">
+                    <span id="speed">--</span>
+                    <label>Typing Speed (ms)</label>
+                </div>
+                <div class="box">
+                    <span id="statusText">Waiting</span>
+                    <label>Status</label>
+                </div>
+            </div>
+        </section>
+
+        <section class="right-panel">
+            <h2>Authentication Monitor</h2>
+
+            <div id="statusCard" class="status-card info">
+                ⏳ Monitoring user behavior...
+                <div class="speed-compare">
+                    <p>Baseline Speed: <span id="baseSpeed">--</span> ms</p>
+                    <p>Current Speed: <span id="currentSpeed">--</span> ms</p>
+                </div>
+            </div>
+
+
+            <ul class="logs" id="logBox">
+                <li>System initialized</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        Continuous Authentication using Behavioral Biometrics | IPBL Project
+    </footer>
+
+    <script>
+        let lastKeyTime = null;
+        let intervals = [];
+        let baselineSpeed = null;
+
+        const typingArea = document.getElementById("typingArea");
+        const statusCard = document.getElementById("statusCard");
+        const speedBox = document.getElementById("speed");
+        const baseSpeedText = document.getElementById("baseSpeed");
+        const currentSpeedText = document.getElementById("currentSpeed");
+
+        const statusText = document.getElementById("statusText");
+        const logBox = document.getElementById("logBox");
+
+        function addLog(message) {
+            const li = document.createElement("li");
+            li.textContent = message;
+            logBox.prepend(li);
+        }
+
+        typingArea.addEventListener("keydown", () => {
+            const now = Date.now();
+
+            if (lastKeyTime !== null) {
+                intervals.push(now - lastKeyTime);
+            }
+            lastKeyTime = now;
+
+            if (intervals.length === 10) {
+                const avgSpeed = intervals.reduce((a, b) => a + b) / intervals.length;
+
+                speedBox.textContent = Math.round(avgSpeed);
+                currentSpeedText.textContent = Math.round(avgSpeed);
+
+                if (baselineSpeed === null) {
+                    baselineSpeed = avgSpeed;
+                    baseSpeedText.textContent = Math.round(baselineSpeed);
+
+                    statusCard.className = "status-card success";
+                    statusCard.firstChild.textContent = "📝 Baseline behavior recorded";
+
+                    statusText.textContent = "Genuine";
+                    addLog("Baseline speed set to " + Math.round(baselineSpeed) + " ms");
+                } else {
+                    const diff = Math.abs(baselineSpeed - avgSpeed);
+
+                    if (diff < 150) {
+                        statusCard.className = "status-card success";
+                        statusCard.firstChild.textContent = "✅ Authenticated: Behavior Matched";
+
+                        statusText.textContent = "Authenticated";
+                        addLog("Typing matched baseline speed");
+                    } else {
+                        statusCard.className = "status-card danger";
+                        statusCard.firstChild.textContent = "⚠️ Alert! Behavior Mismatch";
+
+                        statusText.textContent = "Suspicious";
+                        addLog("Typing speed deviated from baseline");
+                    }
+                }
+                intervals = [];
+            }
+
+        });
+    </script>
+
+</body>
+
+</html>
